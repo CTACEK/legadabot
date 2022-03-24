@@ -1,7 +1,7 @@
 from enum import Enum
 
 BOT_TOKEN = "5185285412:AAHrKwxdQwpLN_kGTGsN2trFPuL6e3HPJ84"
-DB_URI = "postgres://xnslxucxorkwwk:9d889a744072a52ec027d59af5b26bd55b13a173ebcd44dc9e63276841ebb60f@ec2-63-34-223-144.eu-west-1.compute.amazonaws.com:5432/dc9ocpmtrg9pqs"
+DB_URI = "postgres://gzojuyakfhtwkn:97755c93ef66fa2be44ca3b15db300ece31297277e914adfd5afaddc6b9920ad@ec2-54-73-178-126.eu-west-1.compute.amazonaws.com:5432/deeoqn4q3gg3am"
 
 
 # Создание состояний по которым будет двигаться бот
@@ -16,5 +16,6 @@ class States(Enum):
     S_QSTN_7 = "7"
     S_QSTN_8 = "8"
     S_QSTN_9 = "9"
-    S_QSTN_10 = "10"
-    S_STATS = "11"
+    S_CNGR = "10"
+    S_LOBBY = "11"
+    S_STATS = "12"
