@@ -6,14 +6,13 @@ db_connection = psycopg2.connect(config.DB_URI, sslmode="require")
 db_object = db_connection.cursor()
 
 
-
 # Сохраняем текущее «состояние» пользователя в нашу базу
 def set_state(user_id, value):
     db_object.execute(f"UPDATE users SET state = '{value}' WHERE id = '{user_id}'")
     db_connection.commit()
 
 
-# Получаем текущее состояние
+# Получаем текущее состояние пользователя
 def get_current_state(user_id):
     db_object.execute(f"SELECT state from users WHERE id = '{user_id}'")
     result = db_object.fetchall()
@@ -26,10 +25,10 @@ def add_answer(user_id, сategory, value):
     db_connection.commit()
 
 
+# Получаем сводку с базы данных по вопросу, кол-ву ответов и критерию + возвращаем всё словарями
 def get_data_2(num_ans, count_ans, criteria):
     db_object.execute(f"SELECT * FROM users")
     data = db_object.fetchall()
-    # print(data)
     if criteria == "Нет":
         all_ans = {ans: 0 for ans in answers[:count_ans]}
         for user in data:

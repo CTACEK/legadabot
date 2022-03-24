@@ -7,14 +7,18 @@ import matplotlib.pyplot as plt
 from telebot import types
 from qstnansw import *
 
-bot = telebot.TeleBot(config.BOT_TOKEN)  # Создание бота с помощью токена
+bot = telebot.TeleBot(config.BOT_TOKEN)  # Создание бота
+print("Бот начал работу")
 
-db_connection = psycopg2.connect(config.DB_URI, sslmode="require")  # Подключение у удалённоё базе данных
-db_object = db_connection.cursor()
+try:
+    db_connection = psycopg2.connect(config.DB_URI, sslmode="require")  # Подключение к базе данных
+    db_object = db_connection.cursor()
+    print("Подлючение к базе данных прошло успешно")
+except Exception:
+    print("Ploblem соединение с базой данных не установлено")
 
-print("Старт бота")  # Вывод в отладочный чат, что бот работает
 
-
+# Функция, которая создаёт клавиатуру, в зависимости от количества ответов
 def createkeyboard(message, count):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     item1 = types.KeyboardButton("1")
@@ -35,45 +39,31 @@ def createkeyboard(message, count):
     bot.send_message(message.chat.id, "Выберите один из предложенных ответов:", reply_markup=markup)
 
 
+# Создание графиков по какому-то критирию
 def creategraph_for_numberedans(num_qst, criteria):
-    std_colors = ["g", "r", "b", "y", "#FF00BB"]
-    # if criteria == "Нет":
-    #     fig, axes = plt.subplots(figsize=(9, 9))
-    #     labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
-    #     all_data = db.get_data_2(num_qst, len(labels), criteria)
-    #
-    #     real = [ans for ans in labels if all_data[str(labels.index(ans) + 1)] != 0]
-    #     curr_data = [value for value in all_data.values() if value != 0]
-    #
-    #     axes.pie(curr_data, labels=real, autopct='%1.1f%%', startangle=130)
-    #     axes.axis("equal")
-    #     axes.set_title(f'{questions[num_qst][0]}')
+    std_colors = ["g", "r", "b", "y", "#FF00BB"]  # Задание стандартных цветов
     if criteria == "Пол":
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))  # Создание сетки диаграмм
+        labels = [ans[3:] for ans in
+                  questions[num_qst][1].split('\n')]  # Ввод в список всех вариантов ответов к вопросу
+        all_colors = {label: std_colors[labels.index(label)] for label in
+                      labels}  # Ввод в список всех вариантов цветов к вопросу
 
-        labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
+        all_data_m, all_data_w = db.get_data_2(num_qst, len(labels), criteria)  # Получение данных в виде словаря
 
-        all_colors = {label: std_colors[labels.index(label)] for label in labels}
-        # print(all_colors)
-
-        all_data_m, all_data_w = db.get_data_2(num_qst, len(labels), criteria)
-
-        real_m = [ans for ans in labels if all_data_m[str(labels.index(ans) + 1)] != 0]
-        # print(real_m)
-        curr_data_m = [value for value in all_data_m.values() if value != 0]
-        # print(curr_data_m)
-        color_m = {name: all_colors[name] for name in all_colors.keys() if name in real_m}
-        # print(color_m)
-
-        # colors = {key: colors[key] for key in labels if all_data_m[key] != 0}
-        # print(colors)
+        real_m = [ans for ans in labels if
+                  all_data_m[str(labels.index(ans) + 1)] != 0]  # Отсечение только ответов пользователей
+        curr_data_m = [value for value in all_data_m.values() if value != 0]  # Список с данными какие ответы кто нажал
+        color_m = {name: all_colors[name] for name in all_colors.keys() if
+                   name in real_m}  # Словарь с цветами среди тех, кто какой вариант выбрал
 
         real_w = [ans for ans in labels if all_data_w[str(labels.index(ans) + 1)] != 0]
         curr_data_w = [value for value in all_data_w.values() if value != 0]
         color_w = {name: all_colors[name] for name in all_colors.keys() if name in real_w}
 
-        ax1.pie(curr_data_m, labels=real_m, colors=list(color_m.values()), autopct='%1.1f%%', startangle=130)
-        ax1.set_title('Как отвечали мужчины')
+        ax1.pie(curr_data_m, labels=real_m, colors=list(color_m.values()), autopct='%1.1f%%',
+                startangle=130)  # Создание диаграммы на фигуре
+        ax1.set_title('Как отвечали мужчины')  # Добавление комментария к диаграмме
         ax2.pie(curr_data_w, labels=real_w, colors=list(color_w.values()), autopct='%1.1f%%', startangle=130)
         ax2.set_title('Как отвечали женщины')
     elif criteria == "Возраст":
@@ -139,9 +129,11 @@ def creategraph_for_numberedans(num_qst, criteria):
         ax5.pie(curr_data_5, labels=real_5, colors=list(color_5.values()), autopct='%1.1f%%', startangle=130)
         ax5.set_title('Как отвечали люди с высшим образованием')
 
-    fig.savefig(f'./resources/photo/graphquestion{num_qst}.png')
+    fig.savefig(
+        f'./resources/photo/graphquestion{num_qst}.png')  # Сохранение файла с диаграммой во временный файл, ибо хостинг его потом "почистит"
 
 
+# Проверка корректности ответов
 def checking(message, count):
     if message.text in answers[:count]:
         return True
@@ -149,6 +141,7 @@ def checking(message, count):
         bot.send_message(message.chat.id, f"Попробуйте ещё раз)")
 
 
+# Проверка корректности пола
 def checksex(message):
     if message.text in ["М", "Ж"]:
         return True
@@ -156,6 +149,7 @@ def checksex(message):
         bot.send_message(message.chat.id, f"Попробуйте ещё раз)")
 
 
+# Проверка корректности города
 def checksity(message):
     if re.fullmatch(r'\D+', message.text):
         return True
@@ -163,6 +157,7 @@ def checksity(message):
         bot.send_message(message.chat.id, f"Попробуйте ещё раз)")
 
 
+# Проверка корректности возраста
 def checkage(message):
     if re.fullmatch(r'\d{1,3}', message.text):
         return True
@@ -193,7 +188,7 @@ def welcome(message):
     db.set_state(message.chat.id, config.States.S_QSTN_0.value)
 
 
-# Функция, вызываемая при введении пользователем команды /reset. Идёт перемещение на меню перепрохождения теста
+# Функция, вызываемая при введении /reset. Ведёт на прохождения теста завоно
 @bot.message_handler(commands=["reset"])
 def cmd_reset(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -203,12 +198,15 @@ def cmd_reset(message):
     db.set_state(message.chat.id, config.States.S_QSTN_0.value)
 
 
+# Функция, вызываемая при введении /stats. Выводит статистику в виде цветных диаграмм пользователю
 @bot.message_handler(commands=["stats"])
 def get_stats(message):
     ask1, ask2, ask3 = 4, 5, 6
-    creategraph_for_numberedans(ask1, "Пол")
-    bot.send_message(message.chat.id, f"Статистика на вопрос: {questions[ask1][0]}")
-    bot.send_photo(message.chat.id, open(f'./resources/photo/graphquestion{ask1}.png', 'rb'))
+    creategraph_for_numberedans(ask1, "Пол")  # Создание диаграммы по категории
+    bot.send_message(message.chat.id,
+                     f"Статистика на вопрос: {questions[ask1][0]}")  # Вывод сообщения какой вопрос обозревается
+    bot.send_photo(message.chat.id,
+                   open(f'./resources/photo/graphquestion{ask1}.png', 'rb'))  # Вывод картинки с диаграммой
 
     creategraph_for_numberedans(ask2, "Возраст")
     bot.send_message(message.chat.id, f"Статистика на вопрос: {questions[ask2][0]}")
@@ -219,7 +217,7 @@ def get_stats(message):
     bot.send_photo(message.chat.id, open(f'./resources/photo/graphquestion{ask3}.png', 'rb'))
 
 
-# Сброс предыдущих ответов, создание клавиатуры и задание первого вопроса + переход на новое состояние
+# Создание кнопок и просьба ответить на первый запрос
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_QSTN_0.value)
 def first_question(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -232,6 +230,8 @@ def first_question(message):
     db.set_state(message.chat.id, config.States.S_QSTN_1.value)
 
 
+# Отлавливание ответа на предыдущий вопрос + проверка корректности данных + внесение данных в бд +
+# отправка следующего вопроса + переключение стадии
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_QSTN_1.value)
 def second_question(message):
     if checksex(message):
@@ -267,7 +267,6 @@ def fifth_question(message):
         db.set_state(message.chat.id, config.States.S_QSTN_5.value)
 
 
-# Отлавливаем ответ на 5 вопрос, проверяем его на корректность + задаём следующий вопрос и переходим на новое состояние
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_QSTN_5.value)
 def sixth_question(message):
     if checking(message, 3):
@@ -310,6 +309,8 @@ def second_question(message):
     db.set_state(message.chat.id, config.States.S_CNGR.value)
 
 
+# Отлавливание ответа на предыдущий вопрос + внесение данных в бд +
+# вывод нового меню для дальнейшей радоте с ботом + переключение стадии
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_CNGR.value)
 def second_question(message):
     db.add_answer(message.chat.id, "ans_10", message.text)
@@ -321,8 +322,10 @@ def second_question(message):
     bot.send_message(message.chat.id,
                      "Большое вам спасибо за участие в опросе!\nЕсли хотите пройти тест ещё раз — нажмите /reset\nЕсли вам интересно узнать статистику ответов — нажмите /stats",
                      reply_markup=markup)
+    db.set_state(message.chat.id, config.States.S_LOBBY.value)
 
 
+# Проверка введённой команды
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_LOBBY.value)
 def eighth_question(message):
     if not message.text == "/reset" or not message.text == "/stats":
