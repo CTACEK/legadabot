@@ -32,88 +32,111 @@ def createkeyboard(message, count):
         markup.add(item1, item2, item3, item4)
     elif count == 5:
         markup.add(item1, item2, item3, item4, item5)
-    bot.send_message(message.chat.id, "Введите один из предложенных ответов:", reply_markup=markup)
+    bot.send_message(message.chat.id, "Выберите один из предложенных ответов:", reply_markup=markup)
 
 
 def creategraph_for_numberedans(num_qst, criteria):
-    if criteria == "Нет":
-        fig, axes = plt.subplots(figsize=(9, 9))
-        labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
-        all_data = db.get_data_2(num_qst, len(labels), criteria)
-
-        real = [ans for ans in labels if all_data[str(labels.index(ans) + 1)] != 0]
-        curr_data = [value for value in all_data.values() if value != 0]
-
-        axes.pie(curr_data, labels=real, autopct='%1.1f%%', startangle=130)
-        axes.axis("equal")
-        axes.set_title(f'{questions[num_qst][0]}')
-    elif criteria == "Пол":
+    std_colors = ["g", "r", "b", "y", "#FF00BB"]
+    # if criteria == "Нет":
+    #     fig, axes = plt.subplots(figsize=(9, 9))
+    #     labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
+    #     all_data = db.get_data_2(num_qst, len(labels), criteria)
+    #
+    #     real = [ans for ans in labels if all_data[str(labels.index(ans) + 1)] != 0]
+    #     curr_data = [value for value in all_data.values() if value != 0]
+    #
+    #     axes.pie(curr_data, labels=real, autopct='%1.1f%%', startangle=130)
+    #     axes.axis("equal")
+    #     axes.set_title(f'{questions[num_qst][0]}')
+    if criteria == "Пол":
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
 
         labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
+
+        all_colors = {label: std_colors[labels.index(label)] for label in labels}
+        # print(all_colors)
+
         all_data_m, all_data_w = db.get_data_2(num_qst, len(labels), criteria)
 
         real_m = [ans for ans in labels if all_data_m[str(labels.index(ans) + 1)] != 0]
+        # print(real_m)
         curr_data_m = [value for value in all_data_m.values() if value != 0]
+        # print(curr_data_m)
+        color_m = {name: all_colors[name] for name in all_colors.keys() if name in real_m}
+        # print(color_m)
+
+        # colors = {key: colors[key] for key in labels if all_data_m[key] != 0}
+        # print(colors)
 
         real_w = [ans for ans in labels if all_data_w[str(labels.index(ans) + 1)] != 0]
         curr_data_w = [value for value in all_data_w.values() if value != 0]
+        color_w = {name: all_colors[name] for name in all_colors.keys() if name in real_w}
 
-        ax1.pie(curr_data_m, labels=real_m, autopct='%1.1f%%', startangle=130)
+        ax1.pie(curr_data_m, labels=real_m, colors=list(color_m.values()), autopct='%1.1f%%', startangle=130)
         ax1.set_title('Как отвечали мужчины')
-        ax2.pie(curr_data_w, labels=real_w, autopct='%1.1f%%', startangle=130)
+        ax2.pie(curr_data_w, labels=real_w, colors=list(color_w.values()), autopct='%1.1f%%', startangle=130)
         ax2.set_title('Как отвечали женщины')
     elif criteria == "Возраст":
         fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(18, 5))
         labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
+        all_colors = {label: std_colors[labels.index(label)] for label in labels}
 
         all_data_29, all_data_30, all_data_50 = db.get_data_2(num_qst, len(labels), criteria)
 
         real_29 = [ans for ans in labels if all_data_29[str(labels.index(ans) + 1)] != 0]
         curr_data_29 = [value for value in all_data_29.values() if value != 0]
+        color_29 = {name: all_colors[name] for name in all_colors.keys() if name in real_29}
 
         real_30 = [ans for ans in labels if all_data_30[str(labels.index(ans) + 1)] != 0]
         curr_data_30 = [value for value in all_data_30.values() if value != 0]
+        color_30 = {name: all_colors[name] for name in all_colors.keys() if name in real_30}
 
         real_50 = [ans for ans in labels if all_data_50[str(labels.index(ans) + 1)] != 0]
         curr_data_50 = [value for value in all_data_50.values() if value != 0]
+        color_50 = {name: all_colors[name] for name in all_colors.keys() if name in real_50}
 
-        ax1.pie(curr_data_29, labels=real_29, autopct='%1.1f%%', startangle=130)
+        ax1.pie(curr_data_29, labels=real_29, colors=list(color_29.values()), autopct='%1.1f%%', startangle=130)
         ax1.set_title('Как отвечали люди до 29 лет')
-        ax2.pie(curr_data_30, labels=real_30, autopct='%1.1f%%', startangle=130)
+        ax2.pie(curr_data_30, labels=real_30, colors=list(color_30.values()), autopct='%1.1f%%', startangle=130)
         ax2.set_title('Как отвечали люди от 30 до 50 лет')
-        ax3.pie(curr_data_50, labels=real_50, autopct='%1.1f%%', startangle=130)
+        ax3.pie(curr_data_50, labels=real_50, colors=list(color_50.values()), autopct='%1.1f%%', startangle=130)
         ax3.set_title('Как отвечали люди больше 50 лет')
     elif criteria == "Образование":
         fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows=1, ncols=5, figsize=(30, 5))
         labels = [ans[3:] for ans in questions[num_qst][1].split('\n')]
+        all_colors = {label: std_colors[labels.index(label)] for label in labels}
 
         all_data_1, all_data_2, all_data_3, all_data_4, all_data_5 = db.get_data_2(num_qst, len(labels), criteria)
 
         real_1 = [ans for ans in labels if all_data_1[str(labels.index(ans) + 1)] != 0]
         curr_data_1 = [value for value in all_data_1.values() if value != 0]
+        color_1 = {name: all_colors[name] for name in all_colors.keys() if name in real_1}
 
         real_2 = [ans for ans in labels if all_data_2[str(labels.index(ans) + 1)] != 0]
         curr_data_2 = [value for value in all_data_2.values() if value != 0]
+        color_2 = {name: all_colors[name] for name in all_colors.keys() if name in real_2}
 
         real_3 = [ans for ans in labels if all_data_3[str(labels.index(ans) + 1)] != 0]
         curr_data_3 = [value for value in all_data_3.values() if value != 0]
+        color_3 = {name: all_colors[name] for name in all_colors.keys() if name in real_3}
 
         real_4 = [ans for ans in labels if all_data_4[str(labels.index(ans) + 1)] != 0]
         curr_data_4 = [value for value in all_data_4.values() if value != 0]
+        color_4 = {name: all_colors[name] for name in all_colors.keys() if name in real_4}
 
         real_5 = [ans for ans in labels if all_data_5[str(labels.index(ans) + 1)] != 0]
         curr_data_5 = [value for value in all_data_5.values() if value != 0]
+        color_5 = {name: all_colors[name] for name in all_colors.keys() if name in real_5}
 
-        ax1.pie(curr_data_1, labels=real_1, autopct='%1.1f%%', startangle=130)
+        ax1.pie(curr_data_1, labels=real_1, colors=list(color_1.values()), autopct='%1.1f%%', startangle=130)
         ax1.set_title('Как отвечали люди c основным общим образованием')
-        ax2.pie(curr_data_2, labels=real_2, autopct='%1.1f%%', startangle=130)
+        ax2.pie(curr_data_2, labels=real_2, colors=list(color_2.values()), autopct='%1.1f%%', startangle=130)
         ax2.set_title('Как отвечали люди с средним общим образованием')
-        ax3.pie(curr_data_3, labels=real_3, autopct='%1.1f%%', startangle=130)
+        ax3.pie(curr_data_3, labels=real_3, colors=list(color_3.values()), autopct='%1.1f%%', startangle=130)
         ax3.set_title('Как отвечали люди с средним профессиональным')
-        ax4.pie(curr_data_4, labels=real_4, autopct='%1.1f%%', startangle=130)
+        ax4.pie(curr_data_4, labels=real_4, colors=list(color_4.values()), autopct='%1.1f%%', startangle=130)
         ax4.set_title('Как отвечали люди с неоконченным высшим')
-        ax5.pie(curr_data_5, labels=real_5, autopct='%1.1f%%', startangle=130)
+        ax5.pie(curr_data_5, labels=real_5, colors=list(color_5.values()), autopct='%1.1f%%', startangle=130)
         ax5.set_title('Как отвечали люди с высшим образованием')
 
     fig.savefig(f'./resources/photo/graphquestion{num_qst}.png')
@@ -157,7 +180,7 @@ def welcome(message):
 
     markup.add(item)
     bot.send_message(message.chat.id,
-                     f"Доброго времени суток, участник опроса!\nЯ бот, который задаст вам пару вопросов",
+                     f"Привет!\nЯ бот, созданный для того, чтобы помогать студентам собирать данные для исследований.",
                      reply_markup=markup)
 
     db_object.execute(f"SELECT id FROM users WHERE id  = {user_id}")
@@ -213,7 +236,8 @@ def first_question(message):
 def second_question(message):
     if checksex(message):
         db.add_answer(message.chat.id, 'ans_1', message.text)
-        bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))])
+        bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))],
+                         reply_markup=types.ReplyKeyboardRemove())
         db.set_state(message.chat.id, config.States.S_QSTN_2.value)
 
 
@@ -266,7 +290,9 @@ def seven_question(message):
 def eighth_question(message):
     if checking(message, 2):
         db.add_answer(message.chat.id, "ans_7", message.text)
-        bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))])
+        bot.send_message(message.chat.id, "А теперь пара вопросов подлиннее:")
+        bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))],
+                         reply_markup=types.ReplyKeyboardRemove())
         db.set_state(message.chat.id, config.States.S_QSTN_8.value)
 
 
@@ -293,7 +319,7 @@ def second_question(message):
     item2 = types.KeyboardButton("/stats")
     markup.add(item1, item2)
     bot.send_message(message.chat.id,
-                     "Большое спасибо за участие в тесте\nЕсли хотите пройти тест ещё раз? - Тыкайке /reset\nНо а если вам интересно узнать статистику - Тыкайне /stats",
+                     "Большое вам спасибо за участие в опросе!\nЕсли хотите пройти тест ещё раз — нажмите /reset\nЕсли вам интересно узнать статистику ответов — нажмите /stats",
                      reply_markup=markup)
 
 
