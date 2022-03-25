@@ -7,15 +7,18 @@ import matplotlib.pyplot as plt
 from telebot import types
 from qstnansw import *
 
-bot = telebot.TeleBot(config.BOT_TOKEN)  # Создание бота
-print("Бот начал работу")
+try:
+    bot = telebot.TeleBot(config.BOT_TOKEN)  # Создание бота
+    print("Бот начал работу")
+except Exception:
+    print("Problem бот не запущен")
 
 try:
     db_connection = psycopg2.connect(config.DB_URI, sslmode="require")  # Подключение к базе данных
     db_object = db_connection.cursor()
-    print("Подлючение к базе данных прошло успешно")
+    print("Подключение к базе данных прошло успешно")
 except Exception:
-    print("Ploblem соединение с базой данных не установлено")
+    print("Problem соединение с базой данных не установлено")
 
 
 # Функция, которая создаёт клавиатуру, в зависимости от количества ответов
@@ -159,7 +162,7 @@ def checksity(message):
 
 # Проверка корректности возраста
 def checkage(message):
-    if re.fullmatch(r'\d{1,3}', message.text):
+    if re.fullmatch(r'\d{1,3}', message.text) and 1 <= int(message.text) <= 150:
         return True
     else:
         bot.send_message(message.chat.id, f"Попробуйте ещё раз)")
@@ -296,14 +299,14 @@ def eighth_question(message):
 
 
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_QSTN_8.value)
-def second_question(message):
+def ninth_question(message):
     db.add_answer(message.chat.id, "ans_8", message.text)
     bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))])
     db.set_state(message.chat.id, config.States.S_QSTN_9.value)
 
 
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_QSTN_9.value)
-def second_question(message):
+def tenth_question(message):
     db.add_answer(message.chat.id, "ans_9", message.text)
     bot.send_message(message.chat.id, questions[int(db.get_current_state(message.chat.id))])
     db.set_state(message.chat.id, config.States.S_CNGR.value)
@@ -312,7 +315,7 @@ def second_question(message):
 # Отлавливание ответа на предыдущий вопрос + внесение данных в бд +
 # вывод нового меню для дальнейшей радоте с ботом + переключение стадии
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_CNGR.value)
-def second_question(message):
+def lobby(message):
     db.add_answer(message.chat.id, "ans_10", message.text)
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -322,12 +325,13 @@ def second_question(message):
     bot.send_message(message.chat.id,
                      "Большое вам спасибо за участие в опросе!\nЕсли хотите пройти тест ещё раз — нажмите /reset\nЕсли вам интересно узнать статистику ответов — нажмите /stats",
                      reply_markup=markup)
+    bot.send_photo(message.chat.id, open(f'./resources/photo/prost.jpg', 'rb'))
     db.set_state(message.chat.id, config.States.S_LOBBY.value)
 
 
 # Проверка введённой команды
 @bot.message_handler(func=lambda message: db.get_current_state(message.chat.id) == config.States.S_LOBBY.value)
-def eighth_question(message):
+def checking_command(message):
     if not message.text == "/reset" or not message.text == "/stats":
         bot.send_message(message.chat.id, "Простите, но у меня нет такой команды :с")
 

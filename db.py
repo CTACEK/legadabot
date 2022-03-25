@@ -29,12 +29,7 @@ def add_answer(user_id, сategory, value):
 def get_data_2(num_ans, count_ans, criteria):
     db_object.execute(f"SELECT * FROM users")
     data = db_object.fetchall()
-    if criteria == "Нет":
-        all_ans = {ans: 0 for ans in answers[:count_ans]}
-        for user in data:
-            if str(user[num_ans + 2]).isdigit(): all_ans[str(user[num_ans + 2]).strip()] += 1
-        return all_ans
-    elif criteria == "Пол":
+    if criteria == "Пол":
         all_ans_m = {ans: 0 for ans in answers[:count_ans]}
         all_ans_w = {ans: 0 for ans in answers[:count_ans]}
         for user in data:
